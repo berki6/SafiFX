@@ -120,6 +120,47 @@ test('the transactions list tabs scope to the right statuses', function () {
         ->assertCanNotSeeTableRecords([$awaitingVerification, $processing, $completed]);
 });
 
+test('confirming payment is a no-op if another admin already processed it first', function () {
+    $admin = User::factory()->create(['is_admin' => true, 'role' => UserRole::SuperAdmin]);
+    $transaction = Transaction::factory()->create(['status' => TransactionStatus::PaymentSubmitted]);
+
+    $this->actingAs($admin);
+
+    // Open the confirmation modal while the record still says "Payment Submitted" (so
+    // mounting succeeds), then have another admin process it out-of-band before the
+    // "Yes, confirm" click lands inside that already-open modal — the exact race the
+    // before()/halt() guard exists to catch, since Livewire only re-checks ->visible()
+    // at mount time, not again when the mounted action is actually called.
+    $component = Livewire::test(ViewTransaction::class, ['record' => $transaction->getRouteKey()])
+        ->mountAction('confirmPayment');
+
+    Transaction::whereKey($transaction->id)->update(['status' => TransactionStatus::Failed]);
+
+    $component->callMountedAction()->assertActionHalted('confirmPayment');
+
+    expect($transaction->fresh()->status)->toBe(TransactionStatus::Failed);
+    expect($transaction->fresh()->processed_by_id)->toBeNull();
+});
+
+test('marking as paid is a no-op if the payment was rejected out from under the page', function () {
+    $admin = User::factory()->create(['is_admin' => true, 'role' => UserRole::SuperAdmin]);
+    $transaction = Transaction::factory()->verified()->create();
+
+    $this->actingAs($admin);
+
+    $component = Livewire::test(ViewTransaction::class, ['record' => $transaction->getRouteKey()])
+        ->mountAction('markAsPaid');
+
+    Transaction::whereKey($transaction->id)->update(['status' => TransactionStatus::Failed]);
+
+    $component->setActionData(['payout_reference' => 'PO123456'])
+        ->callMountedAction()
+        ->assertActionHalted('markAsPaid');
+
+    expect($transaction->fresh()->status)->toBe(TransactionStatus::Failed);
+    expect($transaction->fresh()->payout_reference)->toBeNull();
+});
+
 test('the today overview widget renders for an admin', function () {
     Transaction::factory()->create(['status' => TransactionStatus::PaymentSubmitted]);
     Transaction::factory()->completed()->create();

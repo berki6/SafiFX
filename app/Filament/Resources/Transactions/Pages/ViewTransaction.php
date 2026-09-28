@@ -44,6 +44,17 @@ class ViewTransaction extends ViewRecord
                 ->modalSubmitActionLabel('Yes, payment received')
                 ->authorize('confirmPayment')
                 ->visible(fn (Transaction $record) => $record->status === TransactionStatus::PaymentSubmitted)
+                ->before(function (Action $action, Transaction $record) {
+                    if ($record->fresh()?->status !== TransactionStatus::PaymentSubmitted) {
+                        Notification::make()
+                            ->title('This transaction has already moved on')
+                            ->body('Its status changed since this page loaded — refresh to see the current state.')
+                            ->warning()
+                            ->send();
+
+                        $action->halt();
+                    }
+                })
                 ->action(function (Transaction $record) {
                     try {
                         $record->update([
@@ -80,6 +91,17 @@ class ViewTransaction extends ViewRecord
                 ->modalSubmitActionLabel('Yes, reject payment')
                 ->authorize('rejectPayment')
                 ->visible(fn (Transaction $record) => $record->status === TransactionStatus::PaymentSubmitted)
+                ->before(function (Action $action, Transaction $record) {
+                    if ($record->fresh()?->status !== TransactionStatus::PaymentSubmitted) {
+                        Notification::make()
+                            ->title('This transaction has already moved on')
+                            ->body('Its status changed since this page loaded — refresh to see the current state.')
+                            ->warning()
+                            ->send();
+
+                        $action->halt();
+                    }
+                })
                 ->action(function (Transaction $record) {
                     try {
                         $record->update([
@@ -129,6 +151,17 @@ class ViewTransaction extends ViewRecord
                 ])
                 ->authorize('markAsPaid')
                 ->visible(fn (Transaction $record) => in_array($record->status, [TransactionStatus::PaymentVerified, TransactionStatus::PayoutProcessing], true))
+                ->before(function (Action $action, Transaction $record) {
+                    if (! in_array($record->fresh()?->status, [TransactionStatus::PaymentVerified, TransactionStatus::PayoutProcessing], true)) {
+                        Notification::make()
+                            ->title('This transaction has already moved on')
+                            ->body('Its status changed since this page loaded — refresh to see the current state.')
+                            ->warning()
+                            ->send();
+
+                        $action->halt();
+                    }
+                })
                 ->action(function (Transaction $record, array $data) {
                     try {
                         $record->update([
