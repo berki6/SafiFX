@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -13,11 +14,21 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      *
-     * Production: only creates/updates the admin when ADMIN_PASSWORD is set.
-     * Local/staging: seeds a known admin with is_admin = true.
+     * Reference data (countries, mobile-money networks, exchange rates) is
+     * upsert-safe reference data, not secrets, so it is seeded unconditionally
+     * in every environment, including production.
+     *
+     * Production: the admin user is only created/updated when ADMIN_PASSWORD is set.
+     * Local/staging: a known admin is seeded with is_admin = true.
      */
     public function run(): void
     {
+        $this->call([
+            CountrySeeder::class,
+            MobileMoneyNetworkSeeder::class,
+            ExchangeRateSeeder::class,
+        ]);
+
         if (app()->environment('production')) {
             $this->seedProductionAdmin();
 
@@ -41,6 +52,7 @@ class DatabaseSeeder extends Seeder
                 'name' => (string) config('safifx.admin.name'),
                 'password' => $password,
                 'is_admin' => true,
+                'role' => UserRole::SuperAdmin,
                 'email_verified_at' => now(),
             ],
         );
@@ -54,6 +66,7 @@ class DatabaseSeeder extends Seeder
                 'name' => (string) config('safifx.admin.name'),
                 'password' => (string) (config('safifx.admin.password') ?: 'password'),
                 'is_admin' => true,
+                'role' => UserRole::SuperAdmin,
                 'email_verified_at' => now(),
             ],
         );

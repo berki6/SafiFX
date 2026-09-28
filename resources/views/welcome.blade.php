@@ -68,7 +68,7 @@
                                 Move money across Africa with confidence.
                             </h1>
                             <p class="max-w-2xl text-base text-slate-600 dark:text-zinc-400 sm:text-lg">
-                                Fast, reliable mobile-money currency exchange across Kenya, Uganda, Tanzania, Rwanda, and global USD transfers.
+                                Fast, reliable mobile-money currency exchange between Kenya, Uganda, Tanzania, Rwanda, and Ethiopia.
                             </p>
                             <div class="flex flex-wrap items-center gap-4 pt-2">
                                 <a href="{{ route('transfer.track') }}" wire:navigate>
@@ -164,8 +164,8 @@
                             <span class="text-sm font-medium text-slate-900 dark:text-white">Rwanda &bull; MTN MoMo</span>
                         </div>
                         <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 dark:border-zinc-800 dark:bg-zinc-900">
-                            <flux:icon.currency-dollar class="size-4 text-emerald-600 dark:text-emerald-400" />
-                            <span class="text-sm font-medium text-slate-900 dark:text-white">United States &bull; USD</span>
+                            <flux:icon.globe-alt class="size-4 text-emerald-600 dark:text-emerald-400" />
+                            <span class="text-sm font-medium text-slate-900 dark:text-white">Ethiopia &bull; Telebirr / M-Pesa</span>
                         </div>
                     </div>
                 </div>

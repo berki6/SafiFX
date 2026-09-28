@@ -32,11 +32,16 @@ return [
     |--------------------------------------------------------------------------
     | Trading & Platform Defaults
     |--------------------------------------------------------------------------
+    |
+    | Supported corridors are no longer a config array — they come from the
+    | `countries` and `exchange_rates` tables (see CountrySeeder), which the
+    | administrator manages from the Filament admin panel per docs/SAFIFX.md §2/§6.
+    | `base_currency` is SafiFX's internal settlement/reporting currency only.
+    |
     */
     'platform' => [
         'name' => env('SAFIFX_PLATFORM_NAME', 'SafiFX Trading Platform'),
         'base_currency' => env('SAFIFX_BASE_CURRENCY', 'USD'),
-        'supported_currencies' => ['USD', 'EUR', 'GBP', 'KES', 'UGX', 'TZS'],
     ],
 
 ];

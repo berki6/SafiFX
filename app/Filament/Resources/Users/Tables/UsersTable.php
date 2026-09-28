@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Enums\UserRole;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -26,6 +27,10 @@ class UsersTable
                     ->label('Admin')
                     ->boolean()
                     ->sortable(),
+                TextColumn::make('role')
+                    ->badge()
+                    ->formatStateUsing(fn (?UserRole $state) => $state?->label())
+                    ->placeholder('—'),
                 TextColumn::make('email_verified_at')
                     ->dateTime()
                     ->sortable()
