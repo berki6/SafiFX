@@ -60,12 +60,16 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. The timezone
-    | is set to "UTC" by default as it is suitable for most use cases.
+    | will be used by the PHP date and date-time functions. Defaults to
+    | Africa/Nairobi (EAT, UTC+3) rather than UTC: 4 of SafiFX's 5 corridors
+    | (Kenya, Uganda, Tanzania, Ethiopia) share this zone, and "today" on the
+    | admin dashboard (Transaction::today(), docs/SAFIFX.md §12) needs to
+    | mean the same thing to East African staff as it does to the database —
+    | UTC's midnight boundary sat 3 hours off from theirs.
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'Africa/Nairobi'),
 
     /*
     |--------------------------------------------------------------------------
