@@ -76,6 +76,30 @@ test('choosing the same currency for both sides is rejected', function () {
         ->assertNoRedirect();
 });
 
+test('clearing the amount field does not crash the calculator', function () {
+    // Regression: amount was a strictly-typed `float` property bound via
+    // wire:model.live to a type="number" input. Clearing that input sends an
+    // empty string, and PHP throws an uncaught TypeError assigning "" to a
+    // float property — a real production 500 a user hit mid-calculation.
+    Livewire::test('pages::⚡calculator')
+        ->set('fromCurrency', 'KES')
+        ->set('toCurrency', 'UGX')
+        ->set('amount', 10000)
+        ->set('amount', '')
+        ->assertSet('recipientAmount', 0.0)
+        ->assertSet('totalPay', 200.0); // just the flat fee: totalFor(0) = 0 + fee
+});
+
+test('submitting with a cleared amount shows a friendly error instead of crashing', function () {
+    Livewire::test('pages::⚡calculator')
+        ->set('fromCurrency', 'KES')
+        ->set('toCurrency', 'UGX')
+        ->set('amount', '')
+        ->call('proceedToTransfer')
+        ->assertHasErrors(['amount' => 'required'])
+        ->assertNoRedirect();
+});
+
 test('an unconfigured corridor is rejected instead of redirecting', function () {
     Livewire::test('pages::⚡calculator')
         ->set('fromCurrency', 'UGX')

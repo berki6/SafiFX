@@ -7,7 +7,16 @@ use Livewire\Component;
 new class extends Component {
     public string $fromCurrency = 'KES';
     public string $toCurrency = 'UGX';
-    public float $amount = 10000;
+
+    /**
+     * A string, not float, deliberately: this is wire:model.live-bound to a
+     * type="number" input, and clearing that input sends an empty string.
+     * Assigning "" to a strictly-typed `float` property throws a TypeError
+     * (uncaught, so it 500s) before validation ever gets a chance to show
+     * the friendly "Please enter an amount" message. A string property can
+     * hold "" without complaint; amountValue below does the numeric cast.
+     */
+    public string $amount = '10000';
 
     /**
      * @return \Illuminate\Support\Collection<int, Country>
@@ -32,14 +41,19 @@ new class extends Component {
         return (float) ($this->rateModel?->fee ?? 0);
     }
 
+    public function getAmountValueProperty(): float
+    {
+        return is_numeric($this->amount) ? (float) $this->amount : 0.0;
+    }
+
     public function getTotalPayProperty(): float
     {
-        return $this->rateModel?->totalFor($this->amount) ?? $this->amount;
+        return $this->rateModel?->totalFor($this->amountValue) ?? $this->amountValue;
     }
 
     public function getRecipientAmountProperty(): float
     {
-        return $this->rateModel?->recipientAmountFor($this->amount) ?? 0.0;
+        return $this->rateModel?->recipientAmountFor($this->amountValue) ?? 0.0;
     }
 
     public function swapCurrencies(): void
