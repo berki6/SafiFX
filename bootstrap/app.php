@@ -12,7 +12,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Hostinger fronts every request through its own CDN (hcdn) — without this,
+        // request()->ip() returns the CDN edge's IP for every visitor, not the real
+        // client's, which would make the per-visitor rate limiters on /send and
+        // /track (RateLimiter::hit('...:'.request()->ip())) shared across everyone
+        // hitting that edge instead of scoped per person. The CDN's own IPs aren't
+        // published/stable, so trusting all proxies is Laravel's documented answer
+        // for exactly this case (any cloud load balancer with unknown IPs).
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
