@@ -60,6 +60,26 @@ class Country extends Model
     }
 
     /**
+     * This country's international dialing code, e.g. "+254" for Kenya.
+     *
+     * Deliberately not parsed from `receiving_number`: that field is the
+     * SafiFX deposit channel, which for some countries (e.g. Kenya's M-Pesa
+     * Paybill "522522") is a short code with no dial code in it at all, not
+     * a phone number. Fixed for the 5 MVP corridors (docs/SAFIFX.md §2).
+     */
+    public function dialCode(): ?string
+    {
+        return match ($this->code) {
+            'KE' => '+254',
+            'UG' => '+256',
+            'TZ' => '+255',
+            'RW' => '+250',
+            'ET' => '+251',
+            default => null,
+        };
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

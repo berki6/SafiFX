@@ -123,6 +123,45 @@ test('an implausible email address is rejected', function () {
     expect(Transaction::count())->toBe(0);
 });
 
+test('a recipient phone number with the wrong digit count for its country is rejected', function () {
+    // Regression: 'required|min:8|max:30' alone accepted anything roughly the
+    // right length — e.g. a 10-digit Ugandan number where the corridor only
+    // ever has 9 digits after +256 — with no country-aware format check at all.
+    Livewire::test('pages::⚡send-money')
+        ->set('fromCurrency', 'KES')
+        ->set('toCurrency', 'UGX')
+        ->set('amount', 10000)
+        ->set('senderName', 'John Doe')
+        ->set('senderPhone', '+254712345678')
+        ->set('senderEmail', 'john.doe@example.com')
+        ->set('recipientName', 'Jane Smith')
+        ->set('recipientPhone', '+2567701234567') // 10 digits after +256, not 9
+        ->set('network', 'MTN Mobile Money')
+        ->set('transactionCode', 'QKH89210XZ')
+        ->call('submitTransfer')
+        ->assertHasErrors(['recipientPhone']);
+
+    expect(Transaction::count())->toBe(0);
+});
+
+test('a phone number with the wrong country dial code is rejected', function () {
+    Livewire::test('pages::⚡send-money')
+        ->set('fromCurrency', 'KES')
+        ->set('toCurrency', 'UGX')
+        ->set('amount', 10000)
+        ->set('senderName', 'John Doe')
+        ->set('senderPhone', '+254712345678')
+        ->set('senderEmail', 'john.doe@example.com')
+        ->set('recipientName', 'Jane Smith')
+        ->set('recipientPhone', '+254712345678') // Kenya's code, but recipient is in Uganda
+        ->set('network', 'MTN Mobile Money')
+        ->set('transactionCode', 'QKH89210XZ')
+        ->call('submitTransfer')
+        ->assertHasErrors(['recipientPhone']);
+
+    expect(Transaction::count())->toBe(0);
+});
+
 test('an amount carried in via the url below the corridor minimum is rejected on submit', function () {
     // The calculator enforces limits client-side, but the amount arrives here via
     // a query string the customer could edit by hand, so it must be re-checked.

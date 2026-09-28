@@ -54,13 +54,37 @@ new #[Layout('layouts::public')] class extends Component {
 
     private function phonePrefixFor(Country $country): string
     {
-        // The receiving_number already carries a leading "+<code> " for most
-        // corridors; fall back to an empty prefix when it doesn't parse cleanly.
-        if (preg_match('/^(\+\d{1,4})/', $country->receiving_number, $matches)) {
-            return $matches[1].' ';
-        }
+        return $country->dialCode() ? $country->dialCode().' ' : '';
+    }
 
-        return '';
+    /**
+     * Enforces the selected country's dial code and the shared 9-digit East
+     * African mobile-number length — 'required|min:8|max:30' alone let
+     * anything of roughly the right length through, e.g. a 10-digit number
+     * where the corridor only ever has 9.
+     */
+    private function phoneRuleFor(?Country $country): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail) use ($country) {
+            $dialCode = $country?->dialCode();
+
+            if (! $dialCode) {
+                return;
+            }
+
+            $digits = preg_replace('/\D/', '', (string) $value) ?? '';
+            $dialDigits = preg_replace('/\D/', '', $dialCode) ?? '';
+
+            if (! str_starts_with($digits, $dialDigits)) {
+                $fail("That doesn't look like a {$country->name} number — it should start with {$dialCode}.");
+
+                return;
+            }
+
+            if (strlen(substr($digits, strlen($dialDigits))) !== 9) {
+                $fail("That doesn't look like a valid {$country->name} mobile number — it should have 9 digits after {$dialCode}.");
+            }
+        };
     }
 
     /**
@@ -68,16 +92,19 @@ new #[Layout('layouts::public')] class extends Component {
      */
     public function getRecipientNetworksProperty()
     {
-        $toCountry = Country::query()->where('currency_code', $this->toCurrency)->first();
-
-        return $toCountry
-            ? $toCountry->mobileMoneyNetworks()->active()->orderBy('name')->get()
+        return $this->toCountry
+            ? $this->toCountry->mobileMoneyNetworks()->active()->orderBy('name')->get()
             : collect();
     }
 
     public function getFromCountryProperty(): ?Country
     {
         return Country::query()->where('currency_code', $this->fromCurrency)->first();
+    }
+
+    public function getToCountryProperty(): ?Country
+    {
+        return Country::query()->where('currency_code', $this->toCurrency)->first();
     }
 
     public function getRateModelProperty(): ?ExchangeRate
@@ -152,10 +179,10 @@ new #[Layout('layouts::public')] class extends Component {
                 ...($rate->max_amount ? ['max:'.$rate->max_amount] : []),
             ],
             'senderName' => 'required|min:3|max:255',
-            'senderPhone' => 'required|min:8|max:30',
+            'senderPhone' => ['required', 'min:8', 'max:30', $this->phoneRuleFor($this->fromCountry)],
             'senderEmail' => ['required', $emailRule],
             'recipientName' => 'required|min:3|max:255',
-            'recipientPhone' => 'required|min:8|max:30',
+            'recipientPhone' => ['required', 'min:8', 'max:30', $this->phoneRuleFor($this->toCountry)],
             'network' => 'required',
             'transactionCode' => 'required|min:4|max:50',
         ], [
