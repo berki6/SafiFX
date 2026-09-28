@@ -3,9 +3,10 @@
 use App\Enums\TransactionStatus;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\RateLimiter;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new class extends Component {
+new #[Layout('layouts::public')] class extends Component {
     public string $query = '';
     public ?Transaction $transaction = null;
     public bool $searched = false;

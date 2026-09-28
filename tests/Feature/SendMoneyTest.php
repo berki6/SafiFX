@@ -41,6 +41,15 @@ beforeEach(function () {
     ]);
 });
 
+test('the send-money page renders over a real HTTP request', function () {
+    // Regression: full-page Livewire routes render inside the app's default layout
+    // (layouts::app, the staff sidebar shell), which calls route('dashboard') — a
+    // route that doesn't exist for customers. Component-only tests never hit that
+    // layout at all, so this page 500'd in production despite every test above
+    // passing. /send and /track must use layouts::public instead.
+    $this->get('/send')->assertOk();
+});
+
 test('submitting a valid transfer creates a transaction with the snapshotted rate and fee, and emails the customer', function () {
     Notification::fake();
 

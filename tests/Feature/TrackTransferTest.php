@@ -8,6 +8,15 @@ beforeEach(function () {
     RateLimiter::clear('track-search:127.0.0.1');
 });
 
+test('the track page renders over a real HTTP request', function () {
+    // Regression: full-page Livewire routes render inside the app's default layout
+    // (layouts::app, the staff sidebar shell), which calls route('dashboard') — a
+    // route that doesn't exist for customers. Component-only tests never hit that
+    // layout at all, so this page 500'd in production despite every test above
+    // passing. /track and /send must use layouts::public instead.
+    $this->get('/track')->assertOk();
+});
+
 test('an empty search is rejected with a friendly message instead of a blank lookup', function () {
     Livewire::test('pages::⚡track')
         ->set('query', '')

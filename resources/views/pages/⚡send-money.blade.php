@@ -6,9 +6,10 @@ use App\Models\MobileMoneyNetwork;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-new class extends Component {
+new #[Layout('layouts::public')] class extends Component {
     public string $fromCurrency = 'KES';
     public string $toCurrency = 'UGX';
     public float $amount = 10000;
