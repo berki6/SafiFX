@@ -4,6 +4,7 @@ use App\Enums\TransactionStatus;
 use App\Enums\UserRole;
 use App\Filament\Resources\Transactions\Pages\ListTransactions;
 use App\Filament\Resources\Transactions\Pages\ViewTransaction;
+use App\Filament\Widgets\TodayCurrencyBreakdown;
 use App\Filament\Widgets\TodayOverview;
 use App\Models\Transaction;
 use App\Models\User;
@@ -168,10 +169,11 @@ test('the today overview widget renders for an admin', function () {
     $this->actingAs(User::factory()->create(['is_admin' => true, 'role' => UserRole::SuperAdmin]));
 
     Livewire::test(TodayOverview::class)->assertOk();
+    Livewire::test(TodayCurrencyBreakdown::class)->assertOk();
 });
 
-test('a completed transaction is reflected in the dashboard totals regardless of which direction the corridor runs', function () {
-    // Regression: the widget used to hard-filter every money stat to
+test('a completed transaction is reflected in the currency breakdown regardless of which direction the corridor runs', function () {
+    // Regression: the dashboard used to hard-filter every money stat to
     // from_currency = 'KES', so a real completed transaction going the other
     // way (e.g. UGX -> KES, same as KES -> UGX is just as valid a corridor)
     // silently showed as 0.00 everywhere despite genuinely happening today.
@@ -188,9 +190,11 @@ test('a completed transaction is reflected in the dashboard totals regardless of
 
     $this->actingAs(User::factory()->create(['is_admin' => true, 'role' => UserRole::SuperAdmin]));
 
-    Livewire::test(TodayOverview::class)
+    Livewire::test(TodayCurrencyBreakdown::class)
         ->assertOk()
-        ->assertSee('UGX 101,600.00') // Money Received
-        ->assertSee('KES 3,570.00') // Money Paid Out
-        ->assertSee('UGX 1,600.00'); // Fees Collected
+        ->assertSee('UGX')
+        ->assertSee('KES')
+        ->assertSee('101,600.00') // Received (UGX)
+        ->assertSee('3,570.00') // Paid Out (KES)
+        ->assertSee('1,600.00'); // Fees (UGX)
 });
