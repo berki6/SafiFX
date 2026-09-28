@@ -80,9 +80,6 @@
                                         Track an Existing Transfer
                                     </flux:button>
                                 </a>
-                                <a href="/admin" class="text-xs text-slate-500 hover:text-slate-900 dark:text-zinc-500 dark:hover:text-zinc-300">
-                                    Staff Portal Login &rarr;
-                                </a>
                             </div>
                         </div>
 
@@ -184,7 +181,6 @@
                 </p>
                 <div class="flex items-center gap-6 text-xs font-medium text-slate-600 dark:text-zinc-400">
                     <a href="{{ route('transfer.track') }}" wire:navigate class="hover:text-slate-900 dark:hover:text-white">Track Transfer</a>
-                    <a href="/admin" class="hover:text-slate-900 dark:hover:text-white">Staff Portal</a>
                 </div>
             </div>
         </footer>

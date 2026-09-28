@@ -38,6 +38,13 @@ test('the homepage has no working link to register, dashboard, or login', functi
     $response->assertDontSee('href="/login"', false);
 });
 
+test('the homepage does not advertise the admin panel to guests', function () {
+    $response = $this->get('/');
+
+    $response->assertOk();
+    $response->assertDontSee('href="/admin"', false);
+});
+
 test('the admin panel is unaffected', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
