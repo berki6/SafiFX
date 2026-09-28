@@ -50,6 +50,18 @@ test('the send-money page renders over a real HTTP request', function () {
     $this->get('/send')->assertOk();
 });
 
+test('visiting /send directly without calculator params shows the demo badge', function () {
+    $this->get('/send')
+        ->assertOk()
+        ->assertSee('Example transfer');
+});
+
+test('arriving from the calculator with real params does not show the demo badge', function () {
+    $this->get('/send?from=KES&to=UGX&amount=10000')
+        ->assertOk()
+        ->assertDontSee('Example transfer');
+});
+
 test('submitting a valid transfer creates a transaction with the snapshotted rate and fee, and emails the customer', function () {
     Notification::fake();
 

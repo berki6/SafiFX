@@ -25,8 +25,20 @@ new #[Layout('layouts::public')] class extends Component {
     public bool $submitted = false;
     public string $transactionReference = '';
 
+    /**
+     * True when this page was opened directly (e.g. a bookmarked or shared
+     * /send link) rather than via the calculator's "Continue" redirect, which
+     * always carries all three of from/to/amount together. The deposit card
+     * still needs *something* to show, so it falls back to a default corridor
+     * — this flag lets the view mark that default as an example rather than
+     * silently presenting it as a real personalized quote.
+     */
+    public bool $isDemo = false;
+
     public function mount(): void
     {
+        $this->isDemo = ! request()->has(['from', 'to', 'amount']);
+
         $this->fromCurrency = strtoupper((string) request()->query('from', 'KES'));
         $this->toCurrency = strtoupper((string) request()->query('to', 'UGX'));
         $this->amount = (float) request()->query('amount', 10000);
@@ -256,6 +268,15 @@ new #[Layout('layouts::public')] class extends Component {
                 {{ number_format($amount, 2) }} {{ $fromCurrency }} is outside the allowed range for this corridor
                 ({{ number_format((float) $this->rateModel->min_amount, 0) }}–{{ $this->rateModel->max_amount ? number_format((float) $this->rateModel->max_amount, 0) : '∞' }} {{ $fromCurrency }}).
                 <a href="/" wire:navigate class="underline">Start again from the calculator</a>.
+            </div>
+        @endif
+
+        @if ($isDemo)
+            <div class="mb-4 flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3.5 py-1.5 text-xs font-semibold text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
+                <flux:icon.beaker class="size-3.5 shrink-0" />
+                <span>Example transfer — these are placeholder numbers.</span>
+                <a href="/" wire:navigate class="underline decoration-dotted underline-offset-2 hover:text-amber-950 dark:hover:text-amber-100">Use the calculator</a>
+                <span>for your own quote.</span>
             </div>
         @endif
 
