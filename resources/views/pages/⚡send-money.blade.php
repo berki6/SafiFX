@@ -407,7 +407,7 @@ new #[Layout('layouts::public')] class extends Component {
 
             <form wire:submit="submitTransfer" class="mt-6 space-y-5">
                 <!-- Sender Info Grid -->
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
                     <flux:field>
                         <flux:label>Your Name <span class="text-rose-500">*</span></flux:label>
                         <flux:input wire:model.live.blur="senderName" icon="user" placeholder="e.g. John Doe" required />
@@ -429,7 +429,7 @@ new #[Layout('layouts::public')] class extends Component {
                 </flux:field>
 
                 <!-- Recipient Info Grid -->
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
                     <flux:field>
                         <flux:label>Recipient Name <span class="text-rose-500">*</span></flux:label>
                         <flux:input wire:model.live.blur="recipientName" icon="user" placeholder="e.g. Jane Smith" required />
@@ -444,7 +444,7 @@ new #[Layout('layouts::public')] class extends Component {
                 </div>
 
                 <!-- Network & Transaction Code -->
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
                     <flux:field>
                         <flux:label>Recipient Network <span class="text-rose-500">*</span></flux:label>
                         <flux:select wire:model.live="network" icon="signal">
