@@ -42,3 +42,21 @@ test('a super admin can edit a liquidity balance', function () {
         ->get("/admin/liquidity-balances/{$balance->id}/edit")
         ->assertOk();
 });
+
+test('an operator is forbidden from managing admin users', function () {
+    $operator = User::factory()->create(['is_admin' => true, 'role' => UserRole::Operator]);
+    $other = User::factory()->create(['is_admin' => true, 'role' => UserRole::Operator]);
+
+    $this->actingAs($operator)->get('/admin/users')->assertForbidden();
+    $this->actingAs($operator)->get('/admin/users/create')->assertForbidden();
+    $this->actingAs($operator)->get("/admin/users/{$other->id}/edit")->assertForbidden();
+});
+
+test('a super admin can manage admin users', function () {
+    $admin = User::factory()->create(['is_admin' => true, 'role' => UserRole::SuperAdmin]);
+    $other = User::factory()->create(['is_admin' => true, 'role' => UserRole::Operator]);
+
+    $this->actingAs($admin)->get('/admin/users')->assertOk();
+    $this->actingAs($admin)->get('/admin/users/create')->assertOk();
+    $this->actingAs($admin)->get("/admin/users/{$other->id}/edit")->assertOk();
+});

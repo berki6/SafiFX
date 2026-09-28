@@ -38,6 +38,9 @@ class TodayOverview extends StatsOverviewWidget
         $kesToday = (clone $today)->where('from_currency', 'KES');
 
         $moneyReceived = (clone $kesToday)->sum('total_paid');
+        // recipient_amount = amount_sent * rate (see ExchangeRate::recipientAmountFor()), so
+        // amount_sent is already the KES equivalent of what a completed payout delivered.
+        $moneyPaidOut = (clone $kesToday)->where('status', TransactionStatus::Completed)->sum('amount_sent');
         $fees = (clone $kesToday)->sum('fee');
         $fxRevenue = (clone $kesToday)
             ->whereNotNull('market_rate')
@@ -50,6 +53,7 @@ class TodayOverview extends StatsOverviewWidget
             Stat::make('Completed', $completedCount),
             Stat::make('Failed', $failedCount),
             Stat::make('Money Received (KES)', number_format((float) $moneyReceived, 2)),
+            Stat::make('Money Paid Out (KES Equivalent)', number_format((float) $moneyPaidOut, 2)),
             Stat::make('Fees Collected (KES)', number_format((float) $fees, 2)),
             Stat::make('FX Revenue (KES)', number_format($fxRevenue, 2)),
         ];
