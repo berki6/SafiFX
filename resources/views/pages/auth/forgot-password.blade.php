@@ -23,9 +23,12 @@
             </flux:button>
         </form>
 
+        {{-- Hidden: /login is disabled (routes/web.php), staff use /admin instead. --}}
+        {{--
         <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-400">
             <span>{{ __('Or, return to') }}</span>
             <flux:link :href="route('login')" wire:navigate>{{ __('log in') }}</flux:link>
         </div>
+        --}}
     </div>
 </x-layouts::auth>

@@ -144,7 +144,7 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Features::registration(), // Hidden: no customer accounts in the SafiFX MVP. Uncomment to bring back /register.
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([

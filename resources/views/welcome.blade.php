@@ -41,6 +41,9 @@
                                 Admin Dashboard
                             </flux:button>
                         </a>
+                    @endauth
+                    {{-- Hidden: /login is disabled (routes/web.php), staff use /admin instead. --}}
+                    {{--
                     @else
                         <a href="{{ route('login') }}" class="inline-flex">
                             <flux:button variant="subtle" icon="arrow-right-end-on-rectangle">
@@ -48,6 +51,7 @@
                             </flux:button>
                         </a>
                     @endauth
+                    --}}
                 </nav>
             </div>
         </header>
