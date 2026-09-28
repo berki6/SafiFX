@@ -275,9 +275,25 @@ new #[Layout('layouts::public')] class extends Component {
                         <span>Payment Channel</span>
                         <span class="font-semibold text-slate-900 dark:text-white">{{ $this->fromCountry->receiving_network }}</span>
                     </div>
-                    <div class="flex items-center justify-between text-xs text-slate-600 dark:text-zinc-400">
+                    <div class="flex items-center justify-between text-xs text-slate-600 dark:text-zinc-400" x-data="{ copied: false }">
                         <span>Number / Till</span>
-                        <span class="font-mono text-sm font-bold text-slate-900 dark:text-white">{{ $this->fromCountry->receiving_number }}</span>
+                        <span class="flex items-center gap-2">
+                            <span class="font-mono text-sm font-bold text-slate-900 dark:text-white">{{ $this->fromCountry->receiving_number }}</span>
+                            <button
+                                type="button"
+                                @click="navigator.clipboard.writeText('{{ $this->fromCountry->receiving_number }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                class="inline-flex shrink-0 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-100 active:scale-95 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                            >
+                                <span x-show="!copied" class="flex items-center gap-1">
+                                    <flux:icon.clipboard-document class="size-3.5" />
+                                    Copy
+                                </span>
+                                <span x-show="copied" x-cloak class="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                                    <flux:icon.check class="size-3.5" />
+                                    Copied!
+                                </span>
+                            </button>
+                        </span>
                     </div>
                     <div class="flex items-center justify-between text-xs text-slate-600 dark:text-zinc-400">
                         <span>Account Name</span>
