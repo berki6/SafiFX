@@ -85,7 +85,7 @@
 
                         <!-- Right Column: Livewire 4 Calculator SFC -->
                         <div class="lg:col-span-5">
-                            <livewire:pages.⚡calculator />
+                            @livewire('pages::⚡calculator')
                         </div>
                     </div>
                 </div>

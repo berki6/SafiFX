@@ -16,6 +16,18 @@ beforeEach(function () {
     ]);
 });
 
+test('the calculator actually renders on the homepage', function () {
+    // Regression: welcome.blade.php embedded it via the <livewire:pages::⚡calculator />
+    // HTML-tag syntax. Livewire's tag-name parser doesn't support the ⚡ emoji in that
+    // position — it silently passed the literal tag through as dead text instead of
+    // compiling it, regardless of "." vs "::". The calculator never rendered, in
+    // production or locally, and every test above missed it entirely by testing the
+    // component in isolation. Fixed by switching to @livewire('pages::⚡calculator'),
+    // the directive form, which takes the name as a plain string with no tag-parsing
+    // involved.
+    $this->get('/')->assertOk()->assertSee('Calculate your transfer');
+});
+
 test('calculator uses the configured exchange rate, not a hardcoded one', function () {
     Livewire::test('pages::⚡calculator')
         ->set('fromCurrency', 'KES')
