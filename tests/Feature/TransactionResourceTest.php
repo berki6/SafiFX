@@ -169,3 +169,28 @@ test('the today overview widget renders for an admin', function () {
 
     Livewire::test(TodayOverview::class)->assertOk();
 });
+
+test('a completed transaction is reflected in the dashboard totals regardless of which direction the corridor runs', function () {
+    // Regression: the widget used to hard-filter every money stat to
+    // from_currency = 'KES', so a real completed transaction going the other
+    // way (e.g. UGX -> KES, same as KES -> UGX is just as valid a corridor)
+    // silently showed as 0.00 everywhere despite genuinely happening today.
+    Transaction::factory()->completed()->create([
+        'from_currency' => 'UGX',
+        'to_currency' => 'KES',
+        'amount_sent' => 100000,
+        'exchange_rate' => 0.0357,
+        'market_rate' => 0.036,
+        'fee' => 1600,
+        'total_paid' => 101600,
+        'recipient_amount' => 3570,
+    ]);
+
+    $this->actingAs(User::factory()->create(['is_admin' => true, 'role' => UserRole::SuperAdmin]));
+
+    Livewire::test(TodayOverview::class)
+        ->assertOk()
+        ->assertSee('UGX 101,600.00') // Money Received
+        ->assertSee('KES 3,570.00') // Money Paid Out
+        ->assertSee('UGX 1,600.00'); // Fees Collected
+});
