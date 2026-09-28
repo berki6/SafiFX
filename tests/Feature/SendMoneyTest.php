@@ -5,6 +5,8 @@ use App\Models\Country;
 use App\Models\ExchangeRate;
 use App\Models\MobileMoneyNetwork;
 use App\Models\Transaction;
+use App\Notifications\TransactionCreatedNotification;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Livewire;
 
@@ -39,13 +41,16 @@ beforeEach(function () {
     ]);
 });
 
-test('submitting a valid transfer creates a transaction with the snapshotted rate and fee', function () {
+test('submitting a valid transfer creates a transaction with the snapshotted rate and fee, and emails the customer', function () {
+    Notification::fake();
+
     Livewire::test('pages::⚡send-money')
         ->set('fromCurrency', 'KES')
         ->set('toCurrency', 'UGX')
         ->set('amount', 10000)
         ->set('senderName', 'John Doe')
         ->set('senderPhone', '+254712345678')
+        ->set('senderEmail', 'john.doe@example.com')
         ->set('recipientName', 'Jane Smith')
         ->set('recipientPhone', '+256770123456')
         ->set('network', 'MTN Mobile Money')
@@ -63,12 +68,36 @@ test('submitting a valid transfer creates a transaction with the snapshotted rat
     expect((float) $transaction->recipient_amount)->toBe(280000.0);
     expect($transaction->payment_reference)->toBe('QKH89210XZ');
     expect($transaction->reference)->toStartWith('SFX-');
+    expect($transaction->customer_email)->toBe('john.doe@example.com');
+
+    Notification::assertSentOnDemand(
+        TransactionCreatedNotification::class,
+        fn ($notification, $channels, $notifiable) => $notifiable->routes['mail'] === 'john.doe@example.com',
+    );
 });
 
 test('the transfer form requires all fields before submitting', function () {
     Livewire::test('pages::⚡send-money')
         ->call('submitTransfer')
-        ->assertHasErrors(['senderName', 'recipientName', 'transactionCode']);
+        ->assertHasErrors(['senderName', 'senderEmail', 'recipientName', 'transactionCode']);
+
+    expect(Transaction::count())->toBe(0);
+});
+
+test('an implausible email address is rejected', function () {
+    Livewire::test('pages::⚡send-money')
+        ->set('fromCurrency', 'KES')
+        ->set('toCurrency', 'UGX')
+        ->set('amount', 10000)
+        ->set('senderName', 'John Doe')
+        ->set('senderPhone', '+254712345678')
+        ->set('senderEmail', 'not-an-email')
+        ->set('recipientName', 'Jane Smith')
+        ->set('recipientPhone', '+256770123456')
+        ->set('network', 'MTN Mobile Money')
+        ->set('transactionCode', 'QKH89210XZ')
+        ->call('submitTransfer')
+        ->assertHasErrors(['senderEmail']);
 
     expect(Transaction::count())->toBe(0);
 });
@@ -82,6 +111,7 @@ test('an amount carried in via the url below the corridor minimum is rejected on
         ->set('amount', 500) // below the factory's default min_amount of 1000
         ->set('senderName', 'John Doe')
         ->set('senderPhone', '+254712345678')
+        ->set('senderEmail', 'john.doe@example.com')
         ->set('recipientName', 'Jane Smith')
         ->set('recipientPhone', '+256770123456')
         ->set('network', 'MTN Mobile Money')
@@ -100,6 +130,7 @@ test('an amount above the corridor maximum is rejected on submit', function () {
         ->set('amount', 600000) // above the factory's default max_amount of 500000
         ->set('senderName', 'John Doe')
         ->set('senderPhone', '+254712345678')
+        ->set('senderEmail', 'john.doe@example.com')
         ->set('recipientName', 'Jane Smith')
         ->set('recipientPhone', '+256770123456')
         ->set('network', 'MTN Mobile Money')
@@ -116,6 +147,7 @@ test('sending and receiving in the same currency is rejected', function () {
         ->set('toCurrency', 'KES')
         ->set('senderName', 'John Doe')
         ->set('senderPhone', '+254712345678')
+        ->set('senderEmail', 'john.doe@example.com')
         ->set('recipientName', 'Jane Smith')
         ->set('recipientPhone', '+254700000000')
         ->set('network', 'M-PESA')
@@ -133,6 +165,7 @@ test('repeated transfer submissions from the same connection are rate limited', 
         ->set('amount', 10000)
         ->set('senderName', 'John Doe')
         ->set('senderPhone', '+254712345678')
+        ->set('senderEmail', 'john.doe@example.com')
         ->set('recipientName', 'Jane Smith')
         ->set('recipientPhone', '+256770123456')
         ->set('network', 'MTN Mobile Money');

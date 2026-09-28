@@ -16,9 +16,10 @@ class TransactionInfolist
             ->components([
                 Section::make('Customer')
                     ->schema([
-                        Grid::make(2)->schema([
+                        Grid::make(3)->schema([
                             TextEntry::make('customer_name')->label('Customer'),
                             TextEntry::make('customer_phone')->label('Customer Phone'),
+                            TextEntry::make('customer_email')->label('Customer Email')->placeholder('—'),
                         ]),
                     ]),
 

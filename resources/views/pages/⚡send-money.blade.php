@@ -5,6 +5,7 @@ use App\Models\ExchangeRate;
 use App\Models\MobileMoneyNetwork;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 new class extends Component {
@@ -14,6 +15,7 @@ new class extends Component {
 
     public string $senderName = '';
     public string $senderPhone = '';
+    public string $senderEmail = '';
     public string $recipientName = '';
     public string $recipientPhone = '';
     public string $network = '';
@@ -117,6 +119,18 @@ new class extends Component {
             return;
         }
 
+        // Advanced email validation: RFC format + homograph/spoofing detection always;
+        // an MX-record check is added outside testing only, since it's a live DNS
+        // lookup — unsuitable for a rate-limited public form to depend on in tests
+        // (see the testing-best-practices skill's guidance against outbound network
+        // calls in tests), but valuable in production since this address is where
+        // the customer's transfer-status notifications (docs/SAFIFX.md §21) go.
+        $emailRule = Rule::email()->rfcCompliant(strict: false)->preventSpoofing();
+
+        if (! app()->environment('testing')) {
+            $emailRule = $emailRule->validateMxRecord();
+        }
+
         $this->validate([
             'amount' => [
                 'required',
@@ -126,6 +140,7 @@ new class extends Component {
             ],
             'senderName' => 'required|min:3|max:255',
             'senderPhone' => 'required|min:8|max:30',
+            'senderEmail' => ['required', $emailRule],
             'recipientName' => 'required|min:3|max:255',
             'recipientPhone' => 'required|min:8|max:30',
             'network' => 'required',
@@ -137,6 +152,8 @@ new class extends Component {
             'senderName.min' => 'Your name looks too short — please check it.',
             'senderPhone.required' => 'Please enter your mobile phone number.',
             'senderPhone.min' => 'That phone number looks too short — please check it.',
+            'senderEmail.required' => 'Please enter your email address — we\'ll send your transfer updates here.',
+            'senderEmail.email' => 'That doesn\'t look like a deliverable email address — please double-check it.',
             'recipientName.required' => "Please enter the recipient's name.",
             'recipientName.min' => "The recipient's name looks too short — please check it.",
             'recipientPhone.required' => "Please enter the recipient's mobile phone number.",
@@ -167,6 +184,7 @@ new class extends Component {
             'recipient_amount' => $this->recipientAmount,
             'customer_name' => $this->senderName,
             'customer_phone' => $this->senderPhone,
+            'customer_email' => $this->senderEmail,
             'recipient_name' => $this->recipientName,
             'recipient_phone' => $this->recipientPhone,
             'recipient_network' => $this->network,
@@ -195,6 +213,10 @@ new class extends Component {
                 <div class="flex justify-between text-xs text-slate-600 dark:text-zinc-400">
                     <span>Sender</span>
                     <span class="font-medium text-slate-900 dark:text-white">{{ $senderName }} ({{ $senderPhone }})</span>
+                </div>
+                <div class="flex justify-between text-xs text-slate-600 dark:text-zinc-400">
+                    <span>Updates Sent To</span>
+                    <span class="font-medium text-slate-900 dark:text-white">{{ $senderEmail }}</span>
                 </div>
                 <div class="flex justify-between text-xs text-slate-600 dark:text-zinc-400">
                     <span>Recipient</span>
@@ -295,6 +317,13 @@ new class extends Component {
                         <flux:error name="senderPhone" />
                     </flux:field>
                 </div>
+
+                <flux:field>
+                    <flux:label>Your Email <span class="text-rose-500">*</span></flux:label>
+                    <flux:input wire:model.live.blur="senderEmail" type="email" icon="envelope" placeholder="e.g. you@example.com" required />
+                    <flux:description>We'll send your transfer status updates here.</flux:description>
+                    <flux:error name="senderEmail" />
+                </flux:field>
 
                 <!-- Recipient Info Grid -->
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

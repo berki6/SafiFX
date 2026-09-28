@@ -4,16 +4,18 @@ namespace App\Observers;
 
 use App\Enums\TransactionStatus;
 use App\Models\Transaction;
-use Illuminate\Support\Facades\Log;
+use App\Notifications\PaymentVerifiedNotification;
+use App\Notifications\TransactionCompletedNotification;
+use App\Notifications\TransactionCreatedNotification;
+use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
 
 /**
- * Logs the status-change events docs/SAFIFX.md §21 asks to notify customers on.
- *
- * The spec asks for email/SMS/WhatsApp delivery, but the customer form (§8) never
- * collects an email address and §24 explicitly excludes telecom API integration
- * from the MVP. Until a real channel exists, this observer logs the exact copy
- * spec §21 gives, at the same trigger points a real notification would use, so
- * swapping in `Notification::send(...)` later is a one-line change per event.
+ * Sends the status-change notifications docs/SAFIFX.md §21 asks for, to the
+ * customer's email captured on the send-money form (§8). SMS/WhatsApp are
+ * deliberately not wired up: WhatsApp needs an approved Meta/Twilio business
+ * account and pre-approved message templates before any code can send
+ * through it, and email covers the same three events for now.
  */
 class TransactionObserver
 {
@@ -22,10 +24,7 @@ class TransactionObserver
      */
     public function created(Transaction $transaction): void
     {
-        Log::info("Your SafiFX transaction {$transaction->reference} has been created. Please complete payment using the instructions provided.", [
-            'transaction_id' => $transaction->id,
-            'event' => 'transaction.created',
-        ]);
+        $this->notify($transaction, new TransactionCreatedNotification($transaction));
     }
 
     /**
@@ -38,15 +37,24 @@ class TransactionObserver
         }
 
         match ($transaction->status) {
-            TransactionStatus::PaymentVerified => Log::info(
-                'Your payment has been verified. Your SafiFX payout is now being processed.',
-                ['transaction_id' => $transaction->id, 'event' => 'transaction.payment_verified'],
-            ),
-            TransactionStatus::Completed => Log::info(
-                "Your SafiFX transfer is complete. {$transaction->to_currency} {$transaction->recipient_amount} has been sent to the recipient.",
-                ['transaction_id' => $transaction->id, 'event' => 'transaction.completed'],
-            ),
+            TransactionStatus::PaymentVerified => $this->notify($transaction, new PaymentVerifiedNotification($transaction)),
+            TransactionStatus::Completed => $this->notify($transaction, new TransactionCompletedNotification($transaction)),
             default => null,
         };
+    }
+
+    /**
+     * On-demand delivery: a Transaction has no User/Notifiable account to
+     * route through, only the email address it was submitted with. Older
+     * transactions (seeded/factory data from before this column existed)
+     * may have none, so sending is skipped rather than failing loudly.
+     */
+    private function notify(Transaction $transaction, Notification $notification): void
+    {
+        if (! $transaction->customer_email) {
+            return;
+        }
+
+        NotificationFacade::route('mail', $transaction->customer_email)->notify($notification);
     }
 }

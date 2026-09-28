@@ -29,6 +29,7 @@ use Illuminate\Support\Carbon;
  * @property float $recipient_amount
  * @property string $customer_name
  * @property string $customer_phone
+ * @property string|null $customer_email
  * @property string $recipient_name
  * @property string $recipient_phone
  * @property string $recipient_network
@@ -53,6 +54,7 @@ use Illuminate\Support\Carbon;
     'recipient_amount',
     'customer_name',
     'customer_phone',
+    'customer_email',
     'recipient_name',
     'recipient_phone',
     'recipient_network',

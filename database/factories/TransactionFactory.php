@@ -35,6 +35,7 @@ class TransactionFactory extends Factory
             'recipient_amount' => round($amountSent * $rate, 2),
             'customer_name' => fake()->name(),
             'customer_phone' => fake()->e164PhoneNumber(),
+            'customer_email' => fake()->safeEmail(),
             'recipient_name' => fake()->name(),
             'recipient_phone' => fake()->e164PhoneNumber(),
             'recipient_network' => 'MTN Mobile Money',
