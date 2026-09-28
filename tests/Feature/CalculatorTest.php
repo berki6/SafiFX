@@ -57,6 +57,29 @@ test('calculator rejects an amount above the corridor maximum', function () {
         ->assertHasErrors(['amount']);
 });
 
+test('an out-of-range amount shows a live warning and disables Continue, without needing to submit', function () {
+    // Regression: the input's native HTML min/max attributes let the browser
+    // silently block the submit before proceedToTransfer() (and its friendly
+    // custom error) ever ran — no request reached the server, no message
+    // ever showed. This checks the same live, submit-independent warning
+    // /send already has, driven by amountOutOfRange rather than a form error.
+    Livewire::test('pages::⚡calculator')
+        ->set('fromCurrency', 'KES')
+        ->set('toCurrency', 'UGX')
+        ->set('amount', 500)
+        ->assertSet('amountOutOfRange', true)
+        ->assertSee('is outside the allowed range');
+});
+
+test('an in-range amount shows no warning and Continue stays enabled', function () {
+    Livewire::test('pages::⚡calculator')
+        ->set('fromCurrency', 'KES')
+        ->set('toCurrency', 'UGX')
+        ->set('amount', 10000)
+        ->assertSet('amountOutOfRange', false)
+        ->assertDontSee('is outside the allowed range');
+});
+
 test('calculator redirects to send-money with the chosen corridor and amount', function () {
     Livewire::test('pages::⚡calculator')
         ->set('fromCurrency', 'KES')

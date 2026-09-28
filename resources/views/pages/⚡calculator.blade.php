@@ -46,6 +46,31 @@ new class extends Component {
         return is_numeric($this->amount) ? (float) $this->amount : 0.0;
     }
 
+    /**
+     * True as soon as a typed amount falls outside the corridor's min/max.
+     *
+     * The input also carries native HTML min/max attributes, but relying on
+     * those alone is unreliable: the browser's own validation can silently
+     * block the submit before proceedToTransfer() (and its friendly custom
+     * message) ever runs, with nothing but an easy-to-miss native tooltip.
+     * This gives live, visible feedback the moment typing settles, matching
+     * the equivalent check already on the send-money page.
+     */
+    public function getAmountOutOfRangeProperty(): bool
+    {
+        $rate = $this->rateModel;
+
+        if (! $rate || ! is_numeric($this->amount)) {
+            return false;
+        }
+
+        if ($rate->min_amount !== null && $this->amountValue < (float) $rate->min_amount) {
+            return true;
+        }
+
+        return $rate->max_amount !== null && $this->amountValue > (float) $rate->max_amount;
+    }
+
     public function getTotalPayProperty(): float
     {
         return $this->rateModel?->totalFor($this->amountValue) ?? $this->amountValue;
@@ -163,6 +188,12 @@ new class extends Component {
                 required
             />
             <flux:error name="amount" />
+            @if ($this->rateModel && $this->amountOutOfRange)
+                <p class="text-xs font-medium text-rose-600 dark:text-rose-400">
+                    {{ number_format($this->amountValue, 0) }} {{ $fromCurrency }} is outside the allowed range for this corridor
+                    ({{ number_format((float) $this->rateModel->min_amount, 0) }}–{{ $this->rateModel->max_amount ? number_format((float) $this->rateModel->max_amount, 0) : '∞' }} {{ $fromCurrency }}).
+                </p>
+            @endif
         </flux:field>
 
         @if (! $this->rateModel)
@@ -196,7 +227,7 @@ new class extends Component {
             icon="arrow-right"
             icon-position="after"
             class="w-full justify-center text-base font-bold"
-            :disabled="! $this->rateModel"
+            :disabled="! $this->rateModel || $this->amountOutOfRange"
         >
             Continue to Transfer
         </flux:button>
