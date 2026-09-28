@@ -272,11 +272,24 @@ new #[Layout('layouts::public')] class extends Component {
         @endif
 
         @if ($isDemo)
-            <div class="mb-4 flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3.5 py-1.5 text-xs font-semibold text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
-                <flux:icon.beaker class="size-3.5 shrink-0" />
-                <span>Example transfer — these are placeholder numbers.</span>
-                <a href="/" wire:navigate class="underline decoration-dotted underline-offset-2 hover:text-amber-950 dark:hover:text-amber-100">Use the calculator</a>
-                <span>for your own quote.</span>
+            <div class="mb-4 flex flex-col gap-3 rounded-2xl border border-dashed border-amber-300 bg-amber-50 p-4 dark:border-amber-800/70 dark:bg-amber-950/30 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300">
+                        <flux:icon.beaker class="size-5" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-amber-900 dark:text-amber-200">Example transfer</p>
+                        <p class="text-xs text-amber-800/80 dark:text-amber-300/70">These are placeholder numbers, not a personalized quote.</p>
+                    </div>
+                </div>
+                <a
+                    href="/"
+                    wire:navigate
+                    class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600"
+                >
+                    Use the Calculator
+                    <flux:icon.arrow-right class="size-3.5" />
+                </a>
             </div>
         @endif
 
