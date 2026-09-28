@@ -4,23 +4,70 @@ namespace App\Filament\Widgets;
 
 use App\Enums\TransactionStatus;
 use App\Models\Transaction;
-use Filament\Widgets\Widget;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use Filament\Widgets\TableWidget;
 use Illuminate\Support\Collection;
 
 /**
  * A per-currency table of today's money figures, split out from
  * TodayOverview's stat cards — see that class's docblock for why.
+ *
+ * Built as a genuine Filament table (via ->records(), for the non-Eloquent
+ * per-currency array) rather than hand-rolled HTML: a first attempt used raw
+ * Tailwind utility classes in a custom Blade view, but the admin panel's CSS
+ * is a static bundle shipped by the filament/filament package itself — it
+ * only contains classes Filament's own components already use, and never
+ * gets regenerated from this app's custom views. Utility classes like pe-4
+ * or border-gray-200 simply weren't in it, so the table rendered with no
+ * spacing at all. Filament's own Table component doesn't have that problem,
+ * since its classes are obviously already present.
  */
-class TodayCurrencyBreakdown extends Widget
+class TodayCurrencyBreakdown extends TableWidget
 {
-    protected string $view = 'filament.widgets.today-currency-breakdown';
-
     protected static ?int $sort = 2;
 
+    public function table(Table $table): Table
+    {
+        return $table
+            ->heading("Today's Money, by Currency")
+            ->description("Each corridor settles in its own currency — these aren't blended into one number.")
+            ->records(fn (): array => $this->getRows())
+            ->columns([
+                TextColumn::make('currency')
+                    ->label('Currency')
+                    ->badge()
+                    ->color('gray'),
+                TextColumn::make('received')
+                    ->label('Received')
+                    ->numeric(decimalPlaces: 2)
+                    ->alignEnd()
+                    ->weight('bold'),
+                TextColumn::make('paid_out')
+                    ->label('Paid Out')
+                    ->numeric(decimalPlaces: 2)
+                    ->alignEnd()
+                    ->weight('bold'),
+                TextColumn::make('fees')
+                    ->label('Fees')
+                    ->numeric(decimalPlaces: 2)
+                    ->alignEnd()
+                    ->weight('bold'),
+                TextColumn::make('fx_revenue')
+                    ->label('FX Revenue')
+                    ->numeric(decimalPlaces: 2)
+                    ->alignEnd()
+                    ->weight('bold')
+                    ->color(fn (array $record): ?string => $record['fx_revenue'] < 0 ? 'danger' : null),
+            ])
+            ->paginated(false)
+            ->emptyStateHeading('No transactions yet today');
+    }
+
     /**
-     * @return array<int, array{currency: string, received: float, paid_out: float, fees: float, fx_revenue: float}>
+     * @return array<string, array{currency: string, received: float, paid_out: float, fees: float, fx_revenue: float}>
      */
-    public function getRows(): array
+    private function getRows(): array
     {
         $today = Transaction::query()->today();
 
@@ -59,12 +106,14 @@ class TodayCurrencyBreakdown extends Widget
             ->values();
 
         return $currencies
-            ->map(fn (string $currency) => [
-                'currency' => $currency,
-                'received' => (float) ($received[$currency] ?? 0),
-                'paid_out' => (float) ($paidOut[$currency] ?? 0),
-                'fees' => (float) ($fees[$currency] ?? 0),
-                'fx_revenue' => (float) ($fxRevenue[$currency] ?? 0),
+            ->mapWithKeys(fn (string $currency) => [
+                $currency => [
+                    'currency' => $currency,
+                    'received' => (float) ($received[$currency] ?? 0),
+                    'paid_out' => (float) ($paidOut[$currency] ?? 0),
+                    'fees' => (float) ($fees[$currency] ?? 0),
+                    'fx_revenue' => (float) ($fxRevenue[$currency] ?? 0),
+                ],
             ])
             ->all();
     }
