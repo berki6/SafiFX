@@ -29,6 +29,10 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName('SafiFX Admin')
+            ->brandLogo(fn () => asset('images/logo.png'))
+            ->darkModeBrandLogo(fn () => asset('images/logo-dark.png'))
+            ->brandLogoHeight('2rem')
+            ->favicon(fn () => asset('favicon.ico'))
             ->colors([
                 'primary' => Color::Emerald,
             ])

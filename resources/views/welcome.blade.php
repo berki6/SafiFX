@@ -19,12 +19,8 @@
             <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                 <!-- Logo -->
                 <a href="{{ route('home') }}" class="flex items-center gap-2">
-                    <span class="flex size-9 items-center justify-center rounded-xl bg-emerald-600 font-extrabold text-white">
-                        FX
-                    </span>
-                    <span class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                        Safi<span class="text-emerald-600 dark:text-emerald-400">FX</span>
-                    </span>
+                    <img src="{{ asset('images/logo.png') }}" alt="SafiFX" class="h-8 block dark:hidden" />
+                    <img src="{{ asset('images/logo-dark.png') }}" alt="SafiFX" class="h-8 hidden dark:block" />
                 </a>
 
                 <!-- Nav Links & Auth CTA -->

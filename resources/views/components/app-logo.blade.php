@@ -2,16 +2,7 @@
     'sidebar' => false,
 ])
 
-@if($sidebar)
-    <flux:sidebar.brand :name="config('safifx.platform.name', 'SafiFX')" {{ $attributes }}>
-        <x-slot name="logo" class="flex aspect-square size-8 items-center justify-center rounded-xl bg-emerald-600 font-extrabold text-white">
-            FX
-        </x-slot>
-    </flux:sidebar.brand>
-@else
-    <flux:brand :name="config('safifx.platform.name', 'SafiFX')" {{ $attributes }}>
-        <x-slot name="logo" class="flex aspect-square size-8 items-center justify-center rounded-xl bg-emerald-600 font-extrabold text-white">
-            FX
-        </x-slot>
-    </flux:brand>
-@endif
+<div {{ $attributes->merge(['class' => 'flex items-center gap-2']) }}>
+    <img src="{{ asset('images/logo.png') }}" alt="{{ config('safifx.platform.name', 'SafiFX') }}" class="h-8 block dark:hidden" />
+    <img src="{{ asset('images/logo-dark.png') }}" alt="{{ config('safifx.platform.name', 'SafiFX') }}" class="h-8 hidden dark:block" />
+</div>
