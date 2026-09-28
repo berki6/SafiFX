@@ -218,11 +218,36 @@ new #[Layout('layouts::public')] class extends Component {
                 <flux:icon.check-circle class="size-8 shrink-0" />
                 <div>
                     <h2 class="text-xl font-bold text-slate-900 dark:text-white">Transfer Submitted Successfully</h2>
-                    <p class="text-xs text-slate-500 dark:text-zinc-400">Transaction ID: <span class="font-mono font-bold text-slate-900 dark:text-white">{{ $transactionReference }}</span></p>
+                    <p class="text-xs text-slate-500 dark:text-zinc-400">Save your transaction ID below to track this transfer.</p>
                 </div>
             </div>
 
-            <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3 dark:border-zinc-800 dark:bg-zinc-950/50">
+            <!-- Transaction ID: the one thing the customer must keep — large, and tappable to copy -->
+            <div
+                x-data="{ copied: false }"
+                class="mt-4 flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+            >
+                <div class="min-w-0">
+                    <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Transaction ID</span>
+                    <span class="block truncate font-mono text-lg font-black tracking-wide text-slate-900 dark:text-white sm:text-xl">{{ $transactionReference }}</span>
+                </div>
+                <button
+                    type="button"
+                    @click="navigator.clipboard.writeText('{{ $transactionReference }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                    class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 active:scale-95 dark:border-emerald-800 dark:bg-zinc-900 dark:text-emerald-300 dark:hover:bg-emerald-950/60"
+                >
+                    <span x-show="!copied" class="flex items-center gap-1.5">
+                        <flux:icon.clipboard-document class="size-3.5" />
+                        Copy
+                    </span>
+                    <span x-show="copied" x-cloak class="flex items-center gap-1.5">
+                        <flux:icon.check class="size-3.5" />
+                        Copied!
+                    </span>
+                </button>
+            </div>
+
+            <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3 dark:border-zinc-800 dark:bg-zinc-950/50">
                 <div class="flex justify-between text-xs text-slate-600 dark:text-zinc-400">
                     <span>Sender</span>
                     <span class="font-medium text-slate-900 dark:text-white">{{ $senderName }} ({{ $senderPhone }})</span>
