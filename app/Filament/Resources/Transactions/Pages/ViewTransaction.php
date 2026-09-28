@@ -7,9 +7,12 @@ use App\Filament\Resources\Transactions\TransactionResource;
 use App\Models\Transaction;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ViewTransaction extends ViewRecord
 {
@@ -42,13 +45,27 @@ class ViewTransaction extends ViewRecord
                 ->authorize('confirmPayment')
                 ->visible(fn (Transaction $record) => $record->status === TransactionStatus::PaymentSubmitted)
                 ->action(function (Transaction $record) {
-                    $record->update([
-                        'status' => TransactionStatus::PaymentVerified,
-                        'payment_verified_at' => now(),
-                        'processed_by_id' => Auth::id(),
-                    ]);
-                })
-                ->successNotificationTitle('Payment confirmed — ready for payout'),
+                    try {
+                        $record->update([
+                            'status' => TransactionStatus::PaymentVerified,
+                            'payment_verified_at' => now(),
+                            'processed_by_id' => Auth::id(),
+                        ]);
+
+                        Notification::make()
+                            ->title('Payment confirmed — ready for payout')
+                            ->success()
+                            ->send();
+                    } catch (Throwable $exception) {
+                        Log::error('Failed to confirm payment', ['transaction_id' => $record->id, 'error' => $exception->getMessage()]);
+
+                        Notification::make()
+                            ->title('Action Failed')
+                            ->body('An unexpected error occurred while confirming this payment. Nothing was changed.')
+                            ->danger()
+                            ->send();
+                    }
+                }),
 
             Action::make('rejectPayment')
                 ->label('Reject Payment')
@@ -64,12 +81,26 @@ class ViewTransaction extends ViewRecord
                 ->authorize('rejectPayment')
                 ->visible(fn (Transaction $record) => $record->status === TransactionStatus::PaymentSubmitted)
                 ->action(function (Transaction $record) {
-                    $record->update([
-                        'status' => TransactionStatus::Failed,
-                        'processed_by_id' => Auth::id(),
-                    ]);
-                })
-                ->successNotificationTitle('Payment rejected'),
+                    try {
+                        $record->update([
+                            'status' => TransactionStatus::Failed,
+                            'processed_by_id' => Auth::id(),
+                        ]);
+
+                        Notification::make()
+                            ->title('Payment rejected')
+                            ->success()
+                            ->send();
+                    } catch (Throwable $exception) {
+                        Log::error('Failed to reject payment', ['transaction_id' => $record->id, 'error' => $exception->getMessage()]);
+
+                        Notification::make()
+                            ->title('Action Failed')
+                            ->body('An unexpected error occurred while rejecting this payment. Nothing was changed.')
+                            ->danger()
+                            ->send();
+                    }
+                }),
 
             Action::make('markAsPaid')
                 ->label('Mark As Paid')
@@ -99,14 +130,28 @@ class ViewTransaction extends ViewRecord
                 ->authorize('markAsPaid')
                 ->visible(fn (Transaction $record) => in_array($record->status, [TransactionStatus::PaymentVerified, TransactionStatus::PayoutProcessing], true))
                 ->action(function (Transaction $record, array $data) {
-                    $record->update([
-                        'payout_reference' => $data['payout_reference'],
-                        'status' => TransactionStatus::Completed,
-                        'completed_at' => now(),
-                        'processed_by_id' => Auth::id(),
-                    ]);
-                })
-                ->successNotificationTitle('Transaction marked as paid'),
+                    try {
+                        $record->update([
+                            'payout_reference' => $data['payout_reference'],
+                            'status' => TransactionStatus::Completed,
+                            'completed_at' => now(),
+                            'processed_by_id' => Auth::id(),
+                        ]);
+
+                        Notification::make()
+                            ->title('Transaction marked as paid')
+                            ->success()
+                            ->send();
+                    } catch (Throwable $exception) {
+                        Log::error('Failed to mark transaction as paid', ['transaction_id' => $record->id, 'error' => $exception->getMessage()]);
+
+                        Notification::make()
+                            ->title('Action Failed')
+                            ->body('An unexpected error occurred while recording this payout. Nothing was changed.')
+                            ->danger()
+                            ->send();
+                    }
+                }),
         ];
     }
 }

@@ -56,9 +56,7 @@ class Reports extends Page implements HasTable
                 TextColumn::make('amount_sent')->label('Sent')->numeric(decimalPlaces: 2)->sortable(),
                 TextColumn::make('fee')->label('Fee')->numeric(decimalPlaces: 2)->sortable(),
                 TextColumn::make('status')
-                    ->badge()
-                    ->formatStateUsing(fn (Transaction $record) => $record->status->label())
-                    ->color(fn (Transaction $record) => $record->status->color()),
+                    ->badge(),
                 TextColumn::make('processedBy.name')->label('Operator')->placeholder('—'),
             ])
             ->defaultSort('created_at', 'desc')

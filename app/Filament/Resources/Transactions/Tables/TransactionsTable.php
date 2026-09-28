@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Transactions\Tables;
 use App\Enums\TransactionStatus;
 use App\Models\Transaction;
 use Filament\Actions\ViewAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -17,12 +18,20 @@ class TransactionsTable
             ->columns([
                 TextColumn::make('reference')
                     ->label('ID')
+                    ->weight('bold')
+                    ->icon(Heroicon::OutlinedHashtag)
+                    ->copyable()
+                    ->copyMessage('Reference copied')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('from_currency')
-                    ->label('From'),
+                    ->label('From')
+                    ->badge()
+                    ->color('gray'),
                 TextColumn::make('to_currency')
-                    ->label('To'),
+                    ->label('To')
+                    ->badge()
+                    ->color('gray'),
                 TextColumn::make('amount_sent')
                     ->label('Sent')
                     ->formatStateUsing(fn (Transaction $record) => number_format((float) $record->amount_sent, 2).' '.$record->from_currency),
@@ -30,9 +39,7 @@ class TransactionsTable
                     ->label('Receive')
                     ->formatStateUsing(fn (Transaction $record) => number_format((float) $record->recipient_amount, 2).' '.$record->to_currency),
                 TextColumn::make('status')
-                    ->badge()
-                    ->formatStateUsing(fn (Transaction $record) => $record->status->label())
-                    ->color(fn (Transaction $record) => $record->status->color()),
+                    ->badge(),
                 TextColumn::make('created_at')
                     ->label('Date')
                     ->dateTime()
